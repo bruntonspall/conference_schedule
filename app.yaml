@@ -7,6 +7,8 @@ handlers:
   static_dir: jqtouch/jqtouch
 - url: /themes
   static_dir: jqtouch/themes
+- url: /a
+  static_dir: icodemash
 - url: /services/.*
   script: services.py
   login: admin
