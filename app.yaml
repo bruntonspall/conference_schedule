@@ -3,5 +3,8 @@ api_version: 1
 application: test
 version: 1
 handlers:
+- url: /services/.*
+  script: ae_timetable.py
+  login: admin
 - url: /.*
   script: ae_timetable.py    
