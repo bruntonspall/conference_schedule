@@ -4,7 +4,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
-import os
+import os, json, time
 
 def render_template(self, end_point, template_values):
     path = os.path.join(os.path.dirname(__file__), "templates/" + end_point)
@@ -17,6 +17,16 @@ class Event(db.Model):
     location = db.StringProperty()
     speaker = db.StringProperty()
     title = db.StringProperty()
+    
+    def to_dict(self):
+        return {
+        'id':self.id,
+        'start_time':long(time.mktime(self.start_time.timetuple())*1000),
+        'duration':self.duration,
+        'location':self.location,
+        'speaker':self.speaker,
+        'title':self.title,
+        }
     
 
 def fetch_ics_file():
@@ -87,9 +97,20 @@ class AllEvents(webapp.RequestHandler):
     def get(self):
         render_template(self, 'front.html', {'events':Event.all().order('start_time')})
 
+class AllEventsJson(webapp.RequestHandler):
+    def get(self):
+        prefix = ""
+        postfix = ""
+        if self.request.get('callback'):
+            prefix = "%s(" % self.request.get('callback')
+            postfix = ");"
+        events = [e.to_dict() for e in Event.all().order('start_time')]
+        self.response.out.write(prefix+json.dumps(events)+postfix)
+
 application = webapp.WSGIApplication([
             ('/services/fetch_ics', FetchIcs),
             ('/', AllEvents),
+            ('/json', AllEventsJson),
                                         ],
                                      debug=True)
 
