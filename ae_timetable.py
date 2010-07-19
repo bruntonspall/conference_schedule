@@ -3,6 +3,12 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
+from google.appengine.ext.webapp import template
+import os
+
+def render_template(self, end_point, template_values):
+    path = os.path.join(os.path.dirname(__file__), "templates/" + end_point)
+    self.response.out.write(template.render(path, template_values))
 
 class Event(db.Model):
     id = db.StringProperty()
@@ -79,8 +85,7 @@ class FetchIcs(webapp.RequestHandler):
         
 class AllEvents(webapp.RequestHandler):
     def get(self):
-        for e in Event.all().order('start_time'):
-            self.response.out.write('<li>%s - %s</li>' % (e.start_time, e.title))
+        render_template(self, 'front.html', {'events':Event.all().order('start_time')})
 
 application = webapp.WSGIApplication([
             ('/services/fetch_ics', FetchIcs),

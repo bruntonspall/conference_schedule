@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>front</title>
+	<meta name="generator" content="TextMate http://macromates.com/">
+	<meta name="author" content="MBS">
+	<!-- Date: 2010-07-19 -->
+</head>
+<body>
+	<ul>
+{% for event in events %}
+	<li>
+		<span class="date">{{event.start_time}}</span>
+		<span class="duration">{{event.duration}}</span>
+		<span class="title">{{event.title}}</span>
+		<span class="speaker">{{event.speaker}}</span>
+		<span class="location">{{event.location}}</span>
+	</li>
+{% endfor %}
+	</ul>
+</body>
+</html>
