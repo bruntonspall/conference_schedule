@@ -4,7 +4,11 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
-import os, json, time, logging
+import os, time, logging
+try:
+    import json
+except ImportError:
+    from django.utils import simplejson as json
 
 def render_template(self, end_point, template_values):
     path = os.path.join(os.path.dirname(__file__), "templates/" + end_point)
