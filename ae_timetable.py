@@ -61,6 +61,32 @@ class AllEventsJson(webapp.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(data)
 
+class NewJson(webapp.RequestHandler):
+    def get(self):
+        data = memcache.get('newjson')
+        if data is None:            
+            prefix = ""
+            postfix = ""
+            if self.request.get('callback'):
+                prefix = "%s(" % self.request.get('callback')
+                postfix = ");"
+            all_events = Event.all().order('start_time')
+            d = {
+            'days':sorted(list(set([(e.day.toordinal(),e.day.strftime("%A, %d %b")) for e in all_events]))),
+            'slots':sorted(list(set([(time.mktime(e.start_time.timetuple())*1000,e.day.toordinal(),e.start_time.strftime('%H:%M')) for e in all_events]))),
+            'events': [e.to_dict() for e in all_events],
+            }
+            data = prefix+json.dumps(d)+postfix
+            memcache.add('newjson', data, 5)
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(data)
+
+
+class HomePage(webapp.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'text/html'
+        render_template(self, 'front.html', {})
+
 class Manifest(webapp.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/cache-manifest'
@@ -70,8 +96,9 @@ application = webapp.WSGIApplication([
             ('/time/(\d+)', EventsAtTime),
             ('/(\d+)', EventsOnDay),
             ('/json', AllEventsJson),
+            ('/newjson', NewJson),
             ('/manifest', Manifest),
-            ('/', AllEvents),
+            ('/', HomePage),
                                         ],
                                      debug=True)
 
