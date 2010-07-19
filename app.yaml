@@ -3,6 +3,10 @@ api_version: 1
 application: europython2010
 version: 1
 handlers:
+- url: /jqtouch
+  static_dir: jqtouch/jqtouch
+- url: /themes
+  static_dir: jqtouch/themes
 - url: /services/.*
   script: ae_timetable.py
   login: admin

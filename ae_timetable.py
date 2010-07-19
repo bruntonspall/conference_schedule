@@ -5,6 +5,7 @@ from google.appengine.api import urlfetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 import os, time, logging
+import itertools
 try:
     import json
 except ImportError:
@@ -82,6 +83,11 @@ def persist_events(events):
         e.start_time = get_start_time(event)
         e.put()
 
+class FetchLocalIcs(webapp.RequestHandler):
+	def get(self):
+		self.response.headers['Content-Type'] = 'text/plain'
+		content = get_events_list(get_local_ics_file())
+		persist_events(content)
 class FetchIcs(webapp.RequestHandler):
 	def get(self):
 		self.response.headers['Content-Type'] = 'text/plain'
@@ -101,7 +107,13 @@ class FetchIcs(webapp.RequestHandler):
         
 class AllEvents(webapp.RequestHandler):
     def get(self):
-        render_template(self, 'front.html', {'events':Event.all().order('start_time')})
+        all_events = Event.all().order('start_time')
+        events = []
+        event_days = set()
+        for e in all_events:
+            events.append(e.to_dict())
+            event_days.add(str(e.start_time.date()))
+        render_template(self, 'front.html', {'events':events, 'event_days':sorted(event_days)})
 
 class AllEventsJson(webapp.RequestHandler):
     def get(self):
@@ -110,11 +122,13 @@ class AllEventsJson(webapp.RequestHandler):
         if self.request.get('callback'):
             prefix = "%s(" % self.request.get('callback')
             postfix = ");"
-        events = [e.to_dict() for e in Event.all().order('start_time')]
+        all_events = Event.all().order('start_time')
+        events = [e.to_dict() for e in all_events]
         self.response.out.write(prefix+json.dumps(events)+postfix)
 
 application = webapp.WSGIApplication([
             ('/services/fetch_ics', FetchIcs),
+            ('/services/fetch_local', FetchLocalIcs),
             ('/', AllEvents),
             ('/json', AllEventsJson),
                                         ],
