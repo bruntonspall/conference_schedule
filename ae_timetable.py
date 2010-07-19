@@ -4,7 +4,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
-import os, json, time
+import os, json, time, logging
 
 def render_template(self, end_point, template_values):
     path = os.path.join(os.path.dirname(__file__), "templates/" + end_point)
@@ -30,7 +30,9 @@ class Event(db.Model):
     
 
 def fetch_ics_file():
-    response = urlfetch.fetch('http://www.europython.com/talks/timetable/timetable.ics')
+    response = urlfetch.fetch('http://www.europython.eu/talks/timetable/timetable.ics')
+    # logging.info(response.headers)
+    # logging.info(response.content)
     return response.content
     
 def get_local_ics_file():
@@ -79,7 +81,7 @@ def persist_events(events):
 class FetchIcs(webapp.RequestHandler):
 	def get(self):
 		self.response.headers['Content-Type'] = 'text/plain'
-		content = get_events_list(get_local_ics_file())
+		content = get_events_list(fetch_ics_file())
 		persist_events(content)
         # for c in content:         
         #     self.response.out.write(get_start_time(c))
