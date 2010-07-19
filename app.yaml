@@ -8,7 +8,7 @@ handlers:
 - url: /themes
   static_dir: jqtouch/themes
 - url: /services/.*
-  script: ae_timetable.py
+  script: services.py
   login: admin
 - url: /.*
   script: ae_timetable.py    
