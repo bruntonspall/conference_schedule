@@ -1,4 +1,4 @@
 cron:
 - description: Hourly update
   url: /services/fetch_ics
-  schedule: every 1 hour
+  schedule: every 1 hours

@@ -1,6 +1,6 @@
 runtime: python
 api_version: 1
-application: test
+application: europython2010
 version: 1
 handlers:
 - url: /services/.*
