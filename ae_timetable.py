@@ -5,7 +5,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
-import os, time, logging
+import os, time, datetime, logging
 import itertools
 try:
     import json
@@ -21,6 +21,7 @@ def render_template(self, end_point, template_values):
 class Event(db.Model):
     id = db.StringProperty()
     start_time = db.DateTimeProperty()
+    day = db.DateProperty()
     duration = db.IntegerProperty() #In Minutes
     location = db.StringProperty()
     speaker = db.StringProperty()
@@ -31,6 +32,7 @@ class Event(db.Model):
         return {
         'id':self.id,
         'start_time':long(time.mktime(self.start_time.timetuple())*1000),
+        'date':self.day.toordinal(),
         'duration':self.duration,
         'location':self.location,
         'speaker':self.speaker,
@@ -87,6 +89,7 @@ def persist_events(events):
         e.duration = get_duration(event)
         e.location = str(get_location(event))
         e.start_time = get_start_time(event)
+        e.day = e.start_time.date()
         e.abstract = ''
         element = talk_abstracts_soup.find(text=title)
         if element:
@@ -106,17 +109,6 @@ class FetchIcs(webapp.RequestHandler):
 		self.response.headers['Content-Type'] = 'text/plain'
 		content = get_events_list(fetch_ics_file())
 		persist_events(content)
-        # for c in content:         
-        #     self.response.out.write(get_start_time(c))
-        #     self.response.out.write("\t")
-        #     self.response.out.write(get_id(c))
-        #     self.response.out.write("\t")
-        #     self.response.out.write(get_location(c))
-        #     self.response.out.write("\t")
-        #     self.response.out.write(get_duration(c))
-        #     self.response.out.write("\t")
-        #     self.response.out.write(get_speaker_and_title(c))
-        #     self.response.out.write("\n")
         
 class AllEvents(webapp.RequestHandler):
     def get(self):
@@ -125,8 +117,27 @@ class AllEvents(webapp.RequestHandler):
         event_days = set()
         for e in all_events:
             events.append(e.to_dict())
-            event_days.add(str(e.start_time.date()))
+            event_days.add(e.start_time.date())
         render_template(self, 'front.html', {'events':events, 'event_days':sorted(event_days)})
+
+class EventsOnDay(webapp.RequestHandler):
+    def get(self, target_date):
+        all_events = Event.all().filter('day =',datetime.date.fromordinal(int(target_date))).order('start_time')
+        events = []
+        event_slots = set()
+        for e in all_events:
+            events.append(e.to_dict())
+            event_slots.add(e.start_time)
+        render_template(self, 'day.html', {'event_slots':sorted(event_slots)})
+
+class EventsAtTime(webapp.RequestHandler):
+    def get(self, target_time):
+        all_events = Event.all().filter('start_time =',datetime.datetime.fromtimestamp(int(target_time))).order('start_time')
+        events = []
+        event_days = set()
+        for e in all_events:
+            events.append(e.to_dict())
+        render_template(self, 'time.html', {'events':events})
 
 class AllEventsJson(webapp.RequestHandler):
     def get(self):
@@ -140,11 +151,19 @@ class AllEventsJson(webapp.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(prefix+json.dumps(events)+postfix)
 
+class Manifest(webapp.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'text/cache-manifest'
+        render_template(self, 'manifest.txt', {})
+        
 application = webapp.WSGIApplication([
             ('/services/fetch_ics', FetchIcs),
             ('/services/fetch_local', FetchLocalIcs),
-            ('/', AllEvents),
+            ('/time/(\d+)', EventsAtTime),
+            ('/(\d+)', EventsOnDay),
             ('/json', AllEventsJson),
+            ('/manifest', Manifest),
+            ('/', AllEvents),
                                         ],
                                      debug=True)
 

@@ -24,14 +24,10 @@
                     '/themes/jqt/img/loading.gif'
                     ]
             });	
-			$(function(){
-				$('#loading').show();
-				$('#loading').hide();
-			})
 </script><!-- Date: 2010-07-19 -->
 </head>
 <body>
-	<div id="loading" class="hide">Loading...</div>
+	<div id="loading" class="hide"></div>
 	<div id='mainpage' class='current'>
 		<div class="toolbar">
 			<h1>Europython 2010</h1>
@@ -44,5 +40,25 @@
 		{% endfor %}
 		</ul>
 	</div>
+	{% regroup events|dictsort:"start_time" by date as event_list %}
+	{% for event_day in event_list %}
+	<div id='{{event_day.grouper}}'>
+		<div class="toolbar">
+			<a class="back" href="#">Back</a>
+			<h1>Europython 2010</h1>
+		</div>
+		<ul>
+		{% for event in event_day.list %}
+			<li>
+				<span class="date">{{event.start_time}}</span>
+				<span class="duration">{{event.duration}}</span>
+				<span class="title">{{event.title}}</span>
+				<span class="speaker">{{event.speaker}}</span>
+				<span class="location">{{event.location}}</span>
+			</li>
+		{% endfor %}
+		</ul>
+	</div>
+	{% endfor %}
 </body>
 </html>
