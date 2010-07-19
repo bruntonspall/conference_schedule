@@ -1,3 +1,4 @@
+from BeautifulSoup import BeautifulSoup
 import icalendar
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
@@ -10,6 +11,8 @@ try:
 except ImportError:
     from django.utils import simplejson as json
 
+talk_abstracts_url = 'http://www.europython.eu/talks/talk_abstracts/index.html'
+
 def render_template(self, end_point, template_values):
     path = os.path.join(os.path.dirname(__file__), "templates/" + end_point)
     self.response.out.write(template.render(path, template_values))
@@ -21,6 +24,7 @@ class Event(db.Model):
     location = db.StringProperty()
     speaker = db.StringProperty()
     title = db.StringProperty()
+    abstract = db.TextProperty()
     
     def to_dict(self):
         return {
@@ -30,6 +34,7 @@ class Event(db.Model):
         'location':self.location,
         'speaker':self.speaker,
         'title':self.title,
+        'abstract': self.abstract,
         }
     
 
@@ -48,7 +53,7 @@ def get_events_list(icsfile):
 def get_speaker_and_title(event):
     t = event['summary'].split(':')
     if len(t) > 1:
-        return t[0],":".join(t[1:])
+        return t[0].strip(), ":".join(t[1:]).strip()
     else:
         return None, t[0]
 
@@ -72,6 +77,7 @@ def get_start_time(event):
     
 def persist_events(events):
     db.delete(Event.all())
+    talk_abstracts_soup = BeautifulSoup(urlfetch.fetch(talk_abstracts_url).content)
     for event in events:
         speaker, title = get_speaker_and_title(event)
         e = Event()
@@ -80,6 +86,13 @@ def persist_events(events):
         e.duration = get_duration(event)
         e.location = str(get_location(event))
         e.start_time = get_start_time(event)
+        e.abstract = ''
+        element = talk_abstracts_soup.find(text=title)
+        if element:
+            element = element.parent.parent.nextSibling
+            while not unicode(element).startswith('<hr'):
+                e.abstract += unicode(element)
+                element = element.nextSibling
         e.put()
 
 class FetchIcs(webapp.RequestHandler):
@@ -111,6 +124,7 @@ class AllEventsJson(webapp.RequestHandler):
             prefix = "%s(" % self.request.get('callback')
             postfix = ");"
         events = [e.to_dict() for e in Event.all().order('start_time')]
+        self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(prefix+json.dumps(events)+postfix)
 
 application = webapp.WSGIApplication([
