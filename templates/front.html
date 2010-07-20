@@ -28,21 +28,27 @@
 				$('#loading').show();
 				$.getJSON('/newjson', function(data) {
 					var ul = $("<ul class='rounded'></ul>");
-					$.each(data.events, function(i, ev){
-						var panel_top = $("<div class='toolbar'><a href='#"+ev.start_time+"' class='back'></a><h1>"+ev.title+"</h1></div></div>");
-						var panel_content = $("<div class='content'><h1>"+ev.title+"</h1><div class='location'>"+ev.location+"</div></div>");
-						var panel = $("<div id='"+ev.id+"'></div>").append(panel_top).append(panel_content)
+					$.each(data.days, function(i, day) {
+						var panel_top = $("<div class='toolbar'><a href='#' class='back button'></a><h1>"+day+"</h1></div></div>");
+						var panel_content = $("<h1>"+day+"</h1>");
+						var panel = $("<div id='day"+i+"'><ul id='daylist"+i+"'></ul></div>").append(panel_content)
 						$('body').append(panel);
-					})
-					$.each(data.days, function(i, ev) {
-						var panel_top = $("<div class='toolbar'><a href='#"+ev[0]+"' class='back'></a><h1>"+ev[1]+"</h1></div></div>");
-						var panel_content = $("<div class='content'><h1>"+ev[1]+"</h1></div>");
-						var panel = $("<div id='"+ev[0]+"'></div>").append(panel_content)
-						$('body').append(panel);
-						ul.append('<li><a href="#'+ev[0]+'">'+ev[1]+'</a></li>');
+						ul.append('<li><a href="#day'+i+'">'+day+'</a></li>');
 					});
 					$.each(data.slots, function(i, slot) {
-						$('#list'+i[1]).append('<li>'+slot[2]+'</li>');
+						var panel_top = $("<div class='toolbar'><a href='#' class='back button'></a><h1>"+slot[1]+"</h1></div></div>");
+						var panel_content = $("<h1>"+slot.text+"</h1>");
+						var panel = $("<div id='slot"+i+"'><ul id='slotlist"+i+"'></ul></div>").append(panel_content)
+						$('body').append(panel);
+						$('#list'+i[1]).append('<li><a href="#slot'+i+'">'+slot.text+'</a></li>');
+						$('#daylist'+slot.day).append('<li><a href="#slot'+i+'">'+slot.text+'</a></li>');
+					});
+					$.each(data.events, function(i, ev){
+						var panel_top = $("<div class='toolbar'><a href='#"+ev.start_time+"' class='back button'></a><h1>"+ev.title+"</h1></div></div>");
+						var panel_content = $("<h1>"+ev.title+"</h1><div class='location'>"+ev.location+"</div>");
+						var panel = $("<div id='"+ev.id+"'></div>").append(panel_top).append(panel_content)
+						$('body').append(panel);
+						$('#slotlist'+ev.start_time).append('<li><a href="#'+ev.id+'">'+ev.title+'</a></li>');
 					});
 					$('#startingschedule').replaceWith(ul);
 					$('#loading').hide();
@@ -56,11 +62,8 @@
 		<div class="toolbar">
 			<h1>Europython 2010</h1>
 		</div>
-		<div id='container'>
 			<h2>Schedule</h2>
-			<a href="#733970">Test</a>
 			<ul id='startingschedule'>
-		</div>
 	</div>
 </body>
 </html>

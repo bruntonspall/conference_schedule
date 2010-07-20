@@ -4,6 +4,7 @@ from google.appengine.api import memcache
 from google.appengine.ext import webapp
 import os, time, datetime, logging
 import itertools
+import collections
 
 try:
     import json
@@ -72,10 +73,17 @@ class NewJson(webapp.RequestHandler):
                 prefix = "%s(" % self.request.get('callback')
                 postfix = ");"
             all_events = Event.all().order('start_time')
+            days = collections.defaultdict(list)
+            slots = collections.defaultdict(list)
+            events = []
+            for e in all_events:
+                days[e.day.toordinal()] = e.day.strftime("%A, %d %b")
+                slots[int(time.mktime(e.start_time.timetuple())*1000)]={'day':e.day.toordinal(),'text':e.start_time.strftime('%H:%M')}
+                events.append(e.to_dict())
             d = {
-            'days':sorted(list(set([(e.day.toordinal(),e.day.strftime("%A, %d %b")) for e in all_events]))),
-            'slots':sorted(list(set([(time.mktime(e.start_time.timetuple())*1000,e.day.toordinal(),e.start_time.strftime('%H:%M')) for e in all_events]))),
-            'events': [e.to_dict() for e in all_events],
+            'days':days,
+            'slots':slots,
+            'events': events,
             }
             data = prefix+json.dumps(d)+postfix
             memcache.add('newjson', data, 5)
@@ -93,12 +101,18 @@ class Manifest(webapp.RequestHandler):
         self.response.headers['Content-Type'] = 'text/cache-manifest'
         render_template(self, 'manifest.txt', {})
         
+class Test(webapp.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'text/html'
+        render_template(self, 'test.html', {})
+
 application = webapp.WSGIApplication([
             ('/time/(\d+)', EventsAtTime),
             ('/(\d+)', EventsOnDay),
             ('/json', AllEventsJson),
             ('/newjson', NewJson),
             ('/manifest', Manifest),
+            ('/test', Test),
             ('/', HomePage),
                                         ],
                                      debug=True)
