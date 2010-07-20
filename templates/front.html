@@ -29,22 +29,22 @@
 				$.getJSON('/newjson', function(data) {
 					var ul = $("<ul class='rounded'></ul>");
 					$.each(data.days, function(i, day) {
-						var panel_top = $("<div class='toolbar'><a href='#' class='back button'></a><h1>"+day+"</h1></div></div>");
-						var panel_content = $("<h1>"+day+"</h1>");
-						var panel = $("<div id='day"+i+"'><ul id='daylist"+i+"'></ul></div>").append(panel_content)
+						var panel_top = $("<div class='toolbar'><a href='#' class='back button'>Back</a><h1>"+day+"</h1></div>");
+						var panel_content = $("<h2>"+day+"</h2>");
+						var panel = $("<div id='day"+i+"'></div>").append(panel_top).append(panel_content).append($("<ul id='daylist"+i+"'></ul>"))
 						$('body').append(panel);
 						ul.append('<li><a href="#day'+i+'">'+day+'</a></li>');
 					});
 					$.each(data.slots, function(i, slot) {
-						var panel_top = $("<div class='toolbar'><a href='#' class='back button'></a><h1>"+slot[1]+"</h1></div></div>");
+						var panel_top = $("<div class='toolbar'><a href='#' class='back button'>Back</a><h1>"+slot[1]+"</h1></div></div>");
 						var panel_content = $("<h1>"+slot.text+"</h1>");
-						var panel = $("<div id='slot"+i+"'><ul id='slotlist"+i+"'></ul></div>").append(panel_content)
+						var panel = $("<div id='slot"+i+"'></div>").append(panel_top).append(panel_content).append($("<ul id='slotlist"+i+"'></ul>"))
 						$('body').append(panel);
 						$('#list'+i[1]).append('<li><a href="#slot'+i+'">'+slot.text+'</a></li>');
 						$('#daylist'+slot.day).append('<li><a href="#slot'+i+'">'+slot.text+'</a></li>');
 					});
 					$.each(data.events, function(i, ev){
-						var panel_top = $("<div class='toolbar'><a href='#"+ev.start_time+"' class='back button'></a><h1>"+ev.title+"</h1></div></div>");
+						var panel_top = $("<div class='toolbar'><a href='#"+ev.start_time+"' class='back button'>Back</a><h1>"+ev.title+"</h1></div></div>");
 						var panel_content = $("<h1>"+ev.title+"</h1><div class='location'>"+ev.location+"</div>");
 						var panel = $("<div id='"+ev.id+"'></div>").append(panel_top).append(panel_content)
 						$('body').append(panel);
