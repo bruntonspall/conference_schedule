@@ -90,11 +90,15 @@ class NewJson(webapp.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(data)
 
-
-class HomePage(webapp.RequestHandler):
+class FrontPage(webapp.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/html'
         render_template(self, 'front.html', {})
+
+
+class HomePage(webapp.RequestHandler):
+    def get(self):
+        self.redirect('/a/index.html')
 
 class Manifest(webapp.RequestHandler):
     def get(self):
@@ -113,6 +117,7 @@ application = webapp.WSGIApplication([
             ('/newjson', NewJson),
             ('/manifest', Manifest),
             ('/test', Test),
+            ('/b', FrontPage),
             ('/', HomePage),
                                         ],
                                      debug=True)
