@@ -80,7 +80,7 @@ function initializeFavorites(sessions)
     }
   });
 
-  updateFavoritesPanel(sessions);
+  updateFavoritesPanel();
   updateFavoriteCounters();
 
 
@@ -115,9 +115,9 @@ function initializeFavorites(sessions)
   function updateFavoritesPanel()
   {
     $("#favorites").find("> .toolbar").nextAll().remove();
-
     if (favorites.ids().length > 0) {
       var favlist = new FavoritesList(sessions, favorites);
+      window.favlist = favlist;
       $("#favorites").find("> .toolbar").after(favlist.$render());
     } else {
       $("#favorites").find("> .toolbar").after("\
@@ -174,11 +174,12 @@ function FavoritesList(sessions, favorites)
     return $html.children();
   }
 
-  function getFavSessions(sessions)
+  function getFavSessions()
   {
     var favs = [];
     var finder = new FindsSession(sessions);
     $.each(favorites.ids(), function(index, id) {
+        
       var session = finder.byId(id);
       if (session) { favs.push(session); }
     });
